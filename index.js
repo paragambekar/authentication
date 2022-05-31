@@ -7,6 +7,9 @@ const app = express();
 const port = process.env.PORT;
 
 const db = require('./config/mongoose');
+const session = require('express-session');
+const passport = require('passport');
+const passportLocal = require('./config/passport-local-strategy');
 
 const sassMiddleware = require('node-sass-middleware');
 
@@ -25,6 +28,23 @@ app.use(express.static('./assets'));
 // setup view engine 
 app.set('view engine', 'ejs');
 app.set('views' , './views');
+
+app.use(session({
+    name : 'authenticate',
+    secret : 'secret',
+    saveUninitialized : false,
+    resave : false,
+    cookie: {
+        maxAge: (1000 * 60 * 100)
+    },
+
+}));
+
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use(passport.setAuthenticatedUser);
 
 // use express router 
 app.use('/', require('./routes/index'));
