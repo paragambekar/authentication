@@ -1,8 +1,15 @@
 <link rel="stylesheet" href="/css/home.css">
 <h1>Welcome to Authenticator</h1>
 
-<a href="/users/sign-up">Register</a>
-<a href="/users/sign-in">Log In</a>
+<% if(locals.user){ %>
+    <p> <%= user.name %> </p>
+    <a href="/users/sign-out">Log Out</a>
+<% }else{ %>
+    <a href="/users/sign-up">Register</a>
+    <a href="/users/sign-in">Log In</a>
+<% } %>
+
+
 
 <!-- <div id="sign-up-form">
     <form>

@@ -4,6 +4,12 @@ const bcrypt = require('bcrypt');
 
 module.exports.signUp = function(request,response){
 
+    // if user already signed in redirect to profile page 
+    if(request.isAuthenticated()){
+        return response.redirect('/users/profile');
+    }
+
+
     return response.render('sign_up');
 }
 
@@ -41,19 +47,37 @@ module.exports.create = async function(request,response){
 } 
 
 module.exports.signIn = function(request,response){
+
+    // if user already signed in redirect to profile page 
+    if(request.isAuthenticated()){
+        return response.redirect('/users/profile');
+    }
+
+
     console.log('Inside sign in');
     return response.render('sign_in');
 }
 
 module.exports.profile = function(request,response){
     console.log('Inside profile');
+    console.log('Request body------->',request.body);
     return response.render('profile',{
-        user : request.body.name
     })
 }
 
 // Sign in and create a session 
 module.exports.createSession = function(request,response){
     console.log('Inside create session');
-    return response.send('<h1>Session created</h1>');
+    return response.redirect('/users/profile');
+}
+
+module.exports.destroySession = function(request,response){
+
+    // passport js gives this method to logout user 
+    request.logout(function(error){
+        if(error){
+            console.log('Error in logging out',error);
+        }
+        response.redirect('/');
+    })
 }

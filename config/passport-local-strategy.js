@@ -6,39 +6,39 @@ const User = require('../models/user');
 passport.use(new LocalStrategy({
     usernameField: 'email',
 },
-function(email, password, done){
-    // find a user and establish the identity
-    // first email as key is what we have defined in our schema and second one is the one from the current function 
-    User.findOne({email: email}, function(error, user)  {
-        if (error){
-            console.log('Error in finding user --> Passport lo')
-            return done(error);
-        }
-        console.log('User---------->',user); 
+async function(email,password,done){
+
+    try{
+
+        let user = await User.findOne({email : email});
+        console.log('User---------->',user);
+
         let match = false;
-        if(user && bcrypt.compare(password, user.password, function(error,result){
-            if(error){
-                console.log('Error in bcrpyt', error);
-                return done(null, false)
-            }
-            console.log('result',result)
-            match = true;
-            // return done(null,false);
-        }));
+        if(user){
+            match = await bcrypt.compare(password, user.password);
+            console.log('Match----->',match);
+        }
 
-
-        if (!user || (match == false)){
-            // done function first argument is for error and second is authentication is done or not
-            // console.log('user.password & user not found',user.password);
-            console.log(' h password', password);
+        if(!user || !match){
             return done(null, false);
         }
 
         // if user is found we return the user  
+        console.log('User found');
         return done(null, user);
-    });
-}
+        
+
+    }catch(error){
+
+        console.log('Error in bcrpyt', error);
+        return done(error);
+
+    }
+
+ }
 ));
+
+
 
 // serializing the user to decide which key is to be kept in the cookies
 passport.serializeUser(function(user, done){
@@ -67,7 +67,7 @@ passport.checkAuthentication = function(request,response,next){
         return next();
     }
     // if user not found 
-    return response.redirect('/users/sign-in');
+    return response.redirect('/users/sign-in'); 
 
 }
 
