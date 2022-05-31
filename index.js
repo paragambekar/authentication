@@ -6,10 +6,27 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT;
 
+const db = require('./config/mongoose');
 
+const sassMiddleware = require('node-sass-middleware');
+
+app.use(sassMiddleware({ 
+    src : './assets/scss',
+    dest : './assets/css',
+    // debug : true,
+    outputStyle : 'extended',
+    prefix : '/css'
+}));
+
+app.use(express.urlencoded());
+
+app.use(express.static('./assets'));
+
+// setup view engine 
 app.set('view engine', 'ejs');
 app.set('views' , './views');
 
+// use express router 
 app.use('/', require('./routes/index'));
 
 
