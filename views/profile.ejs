@@ -1,6 +1,10 @@
 Welcome to profile page 
 
 <h2> Hello <%= user.name %></h2>
+<% if(locals.user){ %>
+    
+    <a href="/users/forgot-password">Forgot Password?</a>
+<% } %>
 <a href="/users/sign-out">Sign Out</a>
 
 <div>

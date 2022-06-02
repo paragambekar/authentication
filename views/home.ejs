@@ -2,7 +2,7 @@
 <h1>Welcome to Authenticator</h1>
 
 <% if(locals.user){ %>
-    <p> <%= user.name %> </p>
+    <h1> <%= user.name %> </h1>
     <a href="/users/sign-out">Log Out</a>
 <% }else{ %>
     <a href="/users/sign-up">Register</a>
