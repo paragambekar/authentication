@@ -1,4 +1,5 @@
 #home-container {
+  border: 0.5px solid #717276;
   position: absolute;
   width: 30%;
   height: 55%;
@@ -23,6 +24,7 @@
       color: black; }
     #home-container #buttons .btn {
       width: 80%;
+      border: 0.5px solid #6f6262;
       margin: 10px;
       padding: 10px;
       text-align: center;

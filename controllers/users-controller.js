@@ -12,7 +12,6 @@ module.exports.signUp = function(request,response){
         return response.redirect('/users/profile');
     }
 
-
     return response.render('sign_up');
 }
 
@@ -21,7 +20,7 @@ module.exports.create = async function(request,response){
     try{
 
         if(request.body.password != request.body.confirm_password){
-            request.flash('error',"Passwords dont match");
+            request.flash('error',"Passwords Don't Match");
             return response.redirect('back');
         }
 
@@ -36,6 +35,8 @@ module.exports.create = async function(request,response){
                 name : request.body.name,
                 isVerified : false,
             });
+
+            request.flash('success','Account Created. Login to continue');
 
             let transporter = nodemailer.createTransport({
                 service : 'gmail',
@@ -74,7 +75,7 @@ module.exports.create = async function(request,response){
             })
 
             console.log('newUser---->',newUser);
-            request.flash('success','Account Created. Login to continue');
+            
         }
 
         

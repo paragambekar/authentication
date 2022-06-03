@@ -1,5 +1,5 @@
 .container{
-    border: 2px solid black;
+    border: 0.5px solid #717276;
     position: absolute;
     width : 30%;
     // height : 55%;
@@ -56,7 +56,7 @@
                 height : 35px;
                 background-color: #ffd500;
                 border-radius: 8px;
-                border: 1px solid black;
+                border: 1px solid #6f6262;
             }
 
             
@@ -67,7 +67,7 @@
     }
 
     .google-link{
-        border: 1px solid black;
+        border: 1px solid #6f6262;
         width : 80%;
         margin : 10px auto;
         height : 35px;
@@ -75,12 +75,14 @@
         background-color: #53c48b;
         color: black;
         border-radius: 8px;
+        line-height: 30px;
         
     }
     a{
         text-decoration: none;
         color: black;
         padding : 10px;
+        height: 30px;
     }
 
     a:hover{

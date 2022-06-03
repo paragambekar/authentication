@@ -1,4 +1,4 @@
-if(process.env.NODE_ENV !== 'porduction'){
+if(process.env.NODE_ENV !== 'production'){
     require('dotenv').config();
 }
 
@@ -46,7 +46,7 @@ app.use(session({
         maxAge: (1000 * 60 * 100)
     },
     store: MongoStore.create({
-        mongoUrl: 'mongodb://localhost/authentication',
+        mongoUrl: process.env.MONGODB_URI ||  'mongodb://localhost/authentication',
         autoRemove : 'disabled',
     },function(error){
         console.log(error || 'Connect MongoDB setup ok');
