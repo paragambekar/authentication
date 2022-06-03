@@ -1,0 +1,51 @@
+.container{
+    position: absolute;
+    width : 30%;
+    height : 40%;
+    left: 50%;
+    top: 50%;   
+    transform: translate(-50%, -50%);
+    background-color: #f7f7f7;
+    width : 30%;
+    margin:auto;
+    border : 0.5px solid black;
+    border-radius: 8px;
+
+    .heading{
+        color : #075353;
+        font-size : 25px;
+        margin-left: 15px;
+    }
+
+    .verified{
+        margin-left : 20px;
+    }
+
+    #links{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        line-height: 30px;
+        a{
+            border: 1px solid black;
+            text-align: center;
+            text-decoration: none;
+            color: black;
+            width : 80%;
+            height: 30px;
+            margin : 15px;
+        }
+
+        .signOut-btn{
+            background-color: #53c48b;
+            border-radius: 8px;
+        }
+
+        .fpass-btn{
+            background-color: #ffd500;
+            border-radius: 8px;
+        }
+        
+    }
+}

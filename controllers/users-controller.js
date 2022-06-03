@@ -204,7 +204,7 @@ module.exports.forgotPasswordAction = async function(request,response){
 
 
 
-    return response.redirect('back');
+    return response.redirect('/users/profile');
 }
 
 module.exports.resetPassword = async function(request,response){
@@ -247,7 +247,8 @@ module.exports.resetPasswordAction = async function(request,response){
     let user = await User.findById(request.body.id);
     console.log('User in rest pass action----->',user);
     if(user && request.body.password === request.body.confirm_password){
-        user.password = request.body.password;
+        const hashedPassword =await bcrypt.hash(request.body.password,10);
+        user.password = hashedPassword;
         user.save();
         console.log('passwords changed');
         request.logout(function(error){

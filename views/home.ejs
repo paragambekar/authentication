@@ -1,13 +1,22 @@
 <link rel="stylesheet" href="/css/home.css">
-<h1>Welcome to Authenticator</h1>
 
-<% if(locals.user){ %>
-    <h1> <%= user.name %> </h1>
-    <a href="/users/sign-out">Log Out</a>
-<% }else{ %>
-    <a href="/users/sign-up">Register</a>
-    <a href="/users/sign-in">Log In</a>
-<% } %>
+<div id="home-container">
+    <div class="img-div"><img src="/images/logo1.png"></div>
+    <div class="heading"><h3>Create an account or login</h3></div>
+
+    <div id="buttons">
+        <% if(locals.user){ %>
+            <div class="btn"> <h1> <%= user.name %> </h1></div>
+            <div class="btn"><a href="/users/sign-out">Log Out</a></div>    
+        <% }else{ %>
+            <div class="signUp-btn btn"><a href="/users/sign-up">Register</a></div>
+            <div class="logIn-btn btn"><a href="/users/sign-in">Log In</a></div>
+        <% } %>
+    </div>
+
+</div>
+
+
 
 
 
