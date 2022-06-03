@@ -21,6 +21,7 @@ module.exports.create = async function(request,response){
     try{
 
         if(request.body.password != request.body.confirm_password){
+            request.flash('error',"Passwords dont match");
             return response.redirect('back');
         }
 
@@ -73,6 +74,7 @@ module.exports.create = async function(request,response){
             })
 
             console.log('newUser---->',newUser);
+            request.flash('success','Account Created. Login to continue');
         }
 
         
@@ -82,6 +84,7 @@ module.exports.create = async function(request,response){
  
         return response.render('sign_in');
     }catch(error){
+        request.flash('error', 'Error in creating account');
         console.log('Error in creating new user',error);
     }
 
@@ -128,16 +131,19 @@ module.exports.profile = function(request,response){
 // Sign in and create a session 
 module.exports.createSession = function(request,response){
     console.log('Inside create session');
+    request.flash('success','Logged In Successfully');
     return response.redirect('/users/profile');
 }
 
 module.exports.destroySession = function(request,response){
 
     // passport js gives this method to logout user 
+    
     request.logout(function(error){
         if(error){
             console.log('Error in logging out',error);
         }
+        request.flash('success','Logged Out Successfully');
         response.redirect('/');
     })
 }
@@ -147,6 +153,7 @@ module.exports.forgotPassword = function(request,response){
 
     // console.log('Rq body in forgot pass',request.body);
     // console.log('Locals users', locals.user);
+    request.flash('info','Email has been sent to reset password');
     return response.render('forgot-password');
 }
 
@@ -162,7 +169,7 @@ module.exports.forgotPasswordAction = async function(request,response){
     if(user){
 
         user.emailToken = hashToken;
-        user.tokenExpiresIn = Date.now() + 1000*60*15;
+        user.tokenExpiresIn = Date.now()+ 1000*60*15;
         user.save();
 
         console.log('After generating email Token', user);
@@ -197,14 +204,13 @@ module.exports.forgotPasswordAction = async function(request,response){
             }
         })
 
-
+        request.flash('success','Email sent to reset password');
+        return response.redirect('/users/profile');
     }else{
+        request.flash('error', 'No user found');
         console.log('No user found check email');
+        response.redirect('back');
     } 
-
-
-
-    return response.redirect('/users/profile');
 }
 
 module.exports.resetPassword = async function(request,response){
@@ -214,7 +220,12 @@ module.exports.resetPassword = async function(request,response){
         const id = request.query.lm;
         console.log('Toke in reset Pass----->>',token);
         console.log('Id in reset Pass----->>',id);
-        const user = await User.findById(id);
+        const user = await User.findOne({
+            $and : [
+                { _id : id },
+                {tokenExpiresIn :  { $gt : `${Date.now()}` }}
+            ]
+        });
         if(user){
             console.log('user found in reset pass*****', user);
             console.log('email token in reset pass*****', user.emailToken);
@@ -226,16 +237,18 @@ module.exports.resetPassword = async function(request,response){
                     message : "You can resff the password now"
                 });
             }else{
+                request.flash('error','Invalid Link');
                 console.log('Token invalid');
             }
+        }else{
+            request.flash('error','Invalid Link');
         }
-        return response.render('forgot-password', {
-            message : "Invalid token "
-        })
+        return response.redirect('/users/forgot-password');
 
     }catch(error){
         console.log('Error', error);
-        return;
+        request.flash('error','Tokens expired');
+        return response.redirect('back');
     }
 
 
@@ -244,21 +257,30 @@ module.exports.resetPassword = async function(request,response){
 module.exports.resetPasswordAction = async function(request,response){
     console.log('Request.body in reset password action', request.body);
 
-    let user = await User.findById(request.body.id);
+    // let user = await User.find([{_id : request.body.id},{emailToken :{ $lt : `${Date.now()}`}}]);
+    let user = await User.findOne({
+        $and : [
+            { _id : request.body.id },
+            {tokenExpiresIn :  { $gt : `${Date.now()}` }}
+        ]
+    });
     console.log('User in rest pass action----->',user);
     if(user && request.body.password === request.body.confirm_password){
         const hashedPassword =await bcrypt.hash(request.body.password,10);
         user.password = hashedPassword;
         user.save();
         console.log('passwords changed');
-        request.logout(function(error){
-            if(error){
-                console.log('Error in logging out',error);
-            }
-            response.redirect('/');
-        })
+        request.flash('success','Passowrds changed');
+        // request.logout(function(error){  
+        //     if(error){
+        //         console.log('Error in logging out',error);
+        //     }
+        //     response.redirect('/');
+        // })
+        response.redirect('/users/profile');
     }else{
         console.log('Passwords dont match');
+        request.flash('error','Link expired');
         return response.redirect('back');
     }
 

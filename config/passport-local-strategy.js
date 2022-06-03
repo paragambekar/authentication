@@ -5,8 +5,9 @@ const User = require('../models/user');
 
 passport.use(new LocalStrategy({
     usernameField: 'email',
+    passReqToCallback : true,
 },
-async function(email,password,done){
+async function(request,email,password,done){
 
     try{
 
@@ -20,16 +21,22 @@ async function(email,password,done){
         }
 
         if(!user || !match){
+            if(!user){
+                request.flash('error', 'User doesnt exists');
+            }else{
+                request.flash('error', 'Invalid Email/Password');
+            }
             return done(null, false);
         }
 
-        // if user is found we return the user  
+        // if user is found we return the user
+         
         console.log('User found');
         return done(null, user);
         
 
     }catch(error){
-
+        request.flash('error', 'Error in creating new account')
         console.log('Error in bcrpyt', error);
         return done(error);
 

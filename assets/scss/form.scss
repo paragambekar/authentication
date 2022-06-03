@@ -75,11 +75,16 @@
         background-color: #53c48b;
         color: black;
         border-radius: 8px;
-        a{
-            text-decoration: none;
-            color: black;
-            padding : 10px;
-        }
+        
+    }
+    a{
+        text-decoration: none;
+        color: black;
+        padding : 10px;
+    }
+
+    a:hover{
+        color : darkblue;
     }
         
 
