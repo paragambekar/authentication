@@ -11,7 +11,7 @@ db.on('error', console.log.bind(console, 'Error connecting to MongoDB!'));
 
 // To check is successfully connected to database 
 db.once('open',function(){
-    console.log('Connected to Database :: MongoDB');
+    console.log('Connected to Database :: MongoDB');   
 });
 
 module.exports = db; 

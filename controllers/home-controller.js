@@ -1,4 +1,4 @@
-
+// home controller 
 module.exports.home = function(request, response){
 
      // if user already signed in redirect to profile page 

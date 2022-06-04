@@ -1,31 +1,48 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-const { transporter } = require('../config/nodemailer');
 const crypto = require('crypto');
 const res = require('express/lib/response');
 
+// for sign up form 
 module.exports.signUp = function(request,response){
 
     // if user already signed in redirect to profile page 
     if(request.isAuthenticated()){
         return response.redirect('/users/profile');
     }
-
     return response.render('sign_up');
 }
 
+
+
+// Sign in form : to handle get request ie to take to sign in page 
+module.exports.signIn = function(request,response){
+
+    // if user already signed in redirect to profile page 
+    if(request.isAuthenticated()){
+        return response.redirect('/users/profile');
+    }
+    console.log('Inside sign in');
+    return response.render('sign_in');
+}
+ 
+
+
+
+// Create User : To create new user account 
 module.exports.create = async function(request,response){
-
     try{
-
+        // if password and confirm password dont match
         if(request.body.password != request.body.confirm_password){
             request.flash('error',"Passwords Don't Match");
             return response.redirect('back');
         }
 
+        // Find if user already exists
         let user = await User.findOne({email : request.body.email});
-        console.log('User----------->',user);
+
+        // if doesnt exists create new account 
         if(!user){
             const hashedPassword = await bcrypt.hash(request.body.password,10);
             console.log(hashedPassword);
@@ -35,9 +52,8 @@ module.exports.create = async function(request,response){
                 name : request.body.name,
                 isVerified : false,
             });
-
-            request.flash('success','Account Created. Login to continue');
-
+        
+            // send mail to verify email id
             let transporter = nodemailer.createTransport({
                 service : 'gmail',
                 host : 'smtp.gmail.com',
@@ -49,22 +65,23 @@ module.exports.create = async function(request,response){
                 }
             });
 
-            console.log('New User----------->',newUser);
-            var mailOptions = {
-                from : "Verify your email",
+            let mailOptions = {
+                from : "Authenticator",
                 to : newUser.email,
-                subject : "Verify",
+                subject : "Verify your email!",
                 html : `<h2> Hello ${newUser.name} </h2>
+
+                <p>You registered an account on Authenticator, before being able to use your account you need to verify that this is your email address by clicking here </p>
                 <a href="http://${request.headers.host}/users/verify/?token=${newUser._id}">Click on the link to verify email</a>
+                <br>
+                <br>
+
+                <p> Kind Regards </p>
+
                 `
+            } 
 
-            }
-
-            // transporter.sendMail(mailOptions, function(error,data){
-               
-
-            // });
-
+            // send mail via transporter
             transporter.sendMail(mailOptions, function(error,data){
                 if(error){
                     console.log('Error in sending verification mail', error);
@@ -72,25 +89,21 @@ module.exports.create = async function(request,response){
                 }else{
                     console.log('Verification mail sent!!');
                 }
-            })
-
-            console.log('newUser---->',newUser);
-            
-        }
-
-        
-        console.log('request.body------>>',request.body);
-        // const hashedPassword = await bcrypt.hash(request.body.password,1);
-        // console.log(hashedPassword);
- 
-        return response.render('sign_in');
+            });
+            request.flash('success','Account Created. Login to continue');
+        }else if(user){
+            request.flash('info','Email Id Already Registered');
+        }        
+        return response.redirect('/users/sign-in');
     }catch(error){
         request.flash('error', 'Error in creating account');
         console.log('Error in creating new user',error);
     }
-
 } 
 
+
+
+// to verify user email 
 module.exports.verify = async function(request,response){
     try{
         const token = request.query.token;
@@ -110,36 +123,21 @@ module.exports.verify = async function(request,response){
 
 }
 
-module.exports.signIn = function(request,response){
-
-    // if user already signed in redirect to profile page 
-    if(request.isAuthenticated()){
-        return response.redirect('/users/profile');
-    }
-
-
-    console.log('Inside sign in');
-    return response.render('sign_in');
-}
-
+// Render profile page
 module.exports.profile = function(request,response){
-    console.log('Inside profile');
-    console.log('Request body------->',request.body);
-    return response.render('profile',{
-    })
+    return response.render('profile');
 }
+
 
 // Sign in and create a session 
 module.exports.createSession = function(request,response){
-    console.log('Inside create session');
     request.flash('success','Logged In Successfully');
     return response.redirect('/users/profile');
 }
 
+// To end session ie to logout user
 module.exports.destroySession = function(request,response){
-
     // passport js gives this method to logout user 
-    
     request.logout(function(error){
         if(error){
             console.log('Error in logging out',error);
@@ -150,96 +148,125 @@ module.exports.destroySession = function(request,response){
 }
 
 
+// Forgot Password controller to render appropriate page
 module.exports.forgotPassword = function(request,response){
 
-    // console.log('Rq body in forgot pass',request.body);
-    // console.log('Locals users', locals.user);
-    request.flash('info','Email has been sent to reset password');
+    // if user is already authenticated ie logged in, user can directly change the password
+    if(request.isAuthenticated()){
+        console.log('User authencticated forgot pass',request.user._id);
+        return response.render('reset-password',{
+            id : request.user._id,
+        });
+    }
+    // if not authenticated take user to forgot password from the get valid email id
     return response.render('forgot-password');
 }
 
+
+// Handle the request of Forgot Password ie generate valid token and store it wrt a user
 module.exports.forgotPasswordAction = async function(request,response){
-    console.log('Request Body in fpass action',request.body);
 
-    const{ id , email } = request.body;
-    const token = crypto.randomBytes(20).toString('hex');
-    const hashToken = await bcrypt.hash(token,10);
+    try{
+        const email = request.body.email;
+        // find user of which password has to be changed
+        let users = await User.findOne({email : email});
+        // if found
+        if(users){
+            // generate a token and hash if for more security and store the token for a user
+            const token = await crypto.randomBytes(20).toString('hex');
+            const hashToken = await bcrypt.hash(token,10);
+            users.emailToken = hashToken;
+            // token expires in 15mins
+            users.tokenExpiresIn = Date.now()+ 1000*60*15;
+            users.save();
+            
+            // Create transporter
+            let transporter = nodemailer.createTransport({
+                service : 'gmail',
+                host : 'smtp.gmail.com',
+                port : 587,
+                secure : false,
+                auth : {
+                    user : process.env.USER_ID,
+                    pass : process.env.USER_PASSWORD,
+                }
+            });
+            
+        
+            // Creating mail to send to link to reset password
+            let mailOptions = {
+                from : "Authenticator",
+                to : email,
+                subject : "Reset Password",
+                html : `<h2> Hello ${users.name} </h2>
 
-    let user = await User.findOne({email : email});
-    console.log('user in fpass action', user);
-    if(user){
+                <p>You recently requested to reset the password for your Authenticator account. Click the button below to proceed.</p>
+                <a href="http://${request.headers.host}/users/reset-password/?tc=${token}&lm=${users._id}">Click on the link to Reset Password</a>
+                <br>
+                <br>
 
-        user.emailToken = hashToken;
-        user.tokenExpiresIn = Date.now()+ 1000*60*15;
-        user.save();
+                <p>If you did not request a password reset, please ignore this email or reply to let us know. This password reset link is only valid for the next 15 minutes.</p>
 
-        console.log('After generating email Token', user);
-
-        let transporter = nodemailer.createTransport({
-            service : 'gmail',
-            host : 'smtp.gmail.com',
-            port : 587,
-            secure : false,
-            auth : {
-                user : process.env.USER_ID,
-                pass : process.env.USER_PASSWORD,
-            }
-        });
-
-    
-        var mailOptions = {
-            from : "Verify your email",
-            to : email,
-            subject : "Verify",
-            html : `<h2> Hello ${user.name} </h2>
-            <a href="http://${request.headers.host}/users/reset-password/?tc=${token}&lm=${user._id}">Click on the link to Reset Password</a>
-            `
+                <p> Kind Regards </p>
+                `
         }
 
-        transporter.sendMail(mailOptions, function(error,data){
-            if(error){
-                console.log('Error in reset pass mail', error);
-                return;
-            }else{
-                console.log('Reset pass mail sent!!');
-            }
-        })
-
-        request.flash('success','Email sent to reset password');
-        return response.redirect('/users/profile');
+        // Send mail via nodemailer
+        let msg = await transporter.sendMail(mailOptions);
+        
+        if(request.isAuthenticated()){
+            request.flash('info','Email Sent To Reset Password');
+            return response.redirect('/users/profile');
+        }else{
+            request.flash('info','Email Sent To Reset Password');
+            return response.redirect('/users/sign-in');
+        }
+        
+        
     }else{
-        request.flash('error', 'No user found');
-        console.log('No user found check email');
-        response.redirect('back');
+        console.log('No user! Found Check Email Id');
+        request.flash('error', 'No user! Found Check Email Id');
+        return response.redirect('back');
     } 
+    
+    }catch(error){
+        console.log('error in finding user');
+    }
 }
 
+
+// To validate the link of the user for resetting passwords
 module.exports.resetPassword = async function(request,response){
 
     try{
+        // Extract token & id from query params
         const token  = request.query.tc;
         const id = request.query.lm;
-        console.log('Toke in reset Pass----->>',token);
-        console.log('Id in reset Pass----->>',id);
+        
+        // find user wrt to the id
         const user = await User.findOne({
             $and : [
                 { _id : id },
                 {tokenExpiresIn :  { $gt : `${Date.now()}` }}
             ]
         });
+
+        // if user found 
         if(user){
-            console.log('user found in reset pass*****', user);
-            console.log('email token in reset pass*****', user.emailToken);
+            // Match the token of user and token we have with us in the database
             const match = await bcrypt.compare(token,user.emailToken);
-            console.log('Match',match);
+
+            // if tokens match we can allowed the user to reset password
             if(match){
-                console.log('Tokens matched');
                 return response.render('reset-password',{
-                    message : "You can resff the password now"
+                    message : "You can reset the password now",
+                    id : id,
                 });
+
+                // Not authorized
             }else{
                 request.flash('error','Invalid Link');
-                console.log('Token invalid');
+            
             }
         }else{
             request.flash('error','Invalid Link');
@@ -248,42 +275,71 @@ module.exports.resetPassword = async function(request,response){
 
     }catch(error){
         console.log('Error', error);
-        request.flash('error','Tokens expired');
+        request.flash('error','Token expired');
         return response.redirect('back');
     }
-
-
 }
 
+// Change password according to the data provided in reset password form
 module.exports.resetPasswordAction = async function(request,response){
-    console.log('Request.body in reset password action', request.body);
 
-    // let user = await User.find([{_id : request.body.id},{emailToken :{ $lt : `${Date.now()}`}}]);
-    let user = await User.findOne({
-        $and : [
-            { _id : request.body.id },
-            {tokenExpiresIn :  { $gt : `${Date.now()}` }}
-        ]
-    });
-    console.log('User in rest pass action----->',user);
-    if(user && request.body.password === request.body.confirm_password){
-        const hashedPassword =await bcrypt.hash(request.body.password,10);
-        user.password = hashedPassword;
-        user.save();
-        console.log('passwords changed');
-        request.flash('success','Passowrds changed');
-        // request.logout(function(error){  
-        //     if(error){
-        //         console.log('Error in logging out',error);
-        //     }
-        //     response.redirect('/');
-        // })
-        response.redirect('/users/profile');
-    }else{
-        console.log('Passwords dont match');
-        request.flash('error','Link expired');
+    try{
+        // check if user is already authenticated
+
+        if(request.isAuthenticated()){
+            let user = await User.findById(request.body.id);
+            if(request.body.password === request.body.confirm_password){
+                const hashedPassword =await bcrypt.hash(request.body.password,10);
+                user.password = hashedPassword;
+                user.save();
+                if(request.isAuthenticated()){
+                    request.flash('info','Password Changed');
+                    return response.redirect('/users/profile');
+                }else{
+                    request.flash('info','Password Changed');
+                    return response.redirect('/users/sign-in');
+                }
+            }else{
+                console.log('Passwords dont match');
+                request.flash('error','Link expired');
+                return response.redirect('back');
+            }
+        }else{
+
+            // Reset password with link provided through email
+
+            // find the user with valid token 
+            let user = await User.findOne({
+                $and : [
+                    { _id : request.body.id },
+                    {tokenExpiresIn :  { $gt : `${Date.now()}` }}
+                ]
+            });
+            
+            // if valid token found proceed further
+            // if password & confirm password match, hash it save for security
+            if(user && request.body.password === request.body.confirm_password){
+                const hashedPassword =await bcrypt.hash(request.body.password,10);
+                user.password = hashedPassword;
+                user.save();
+                if(request.isAuthenticated()){
+                    request.flash('info','Password Changed');
+                    return response.redirect('/users/profile');
+                }else{
+                    request.flash('info','Password Changed');
+                    return response.redirect('/users/sign-in');
+                }
+
+                // if passwords dont match throw flash
+            }else{
+                console.log('Passwords dont match');
+                request.flash('error','Link expired');
+                return response.redirect('back');
+            }
+        }
+        
+    }catch(error){
+        console.log('Error while reseting password');
         return response.redirect('back');
     }
-
-    // return response.redirect('/users/profile');
 }

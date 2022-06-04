@@ -1,7 +1,7 @@
 .container{
     position: absolute;
     width : 30%;
-    height : 40%;
+    max-height : 70%;
     left: 50%;
     top: 50%;   
     transform: translate(-50%, -50%);
@@ -31,10 +31,11 @@
             border: 1px solid black;
             text-align: center;
             text-decoration: none;
+            border-radius: 8px;
             color: black;
             width : 80%;
             height: 30px;
-            margin : 15px;
+            margin : 10px 0px;
         }
 
         .signOut-btn{

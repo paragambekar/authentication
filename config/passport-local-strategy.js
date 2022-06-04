@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 const LocalStrategy = require('passport-local').Strategy;
 const User = require('../models/user');
 
+
+// Using passport local strategy to authenticate user using email and password
 passport.use(new LocalStrategy({
     usernameField: 'email',
     passReqToCallback : true,
@@ -10,16 +12,15 @@ passport.use(new LocalStrategy({
 async function(request,email,password,done){
 
     try{
-
+        // find user with the provided email in form 
         let user = await User.findOne({email : email});
-        console.log('User---------->',user);
-
         let match = false;
+        // if found check if password is correct 
         if(user){
             match = await bcrypt.compare(password, user.password);
-            console.log('Match----->',match);
         }
 
+        // if user not found or invalid email/ password
         if(!user || !match){
             if(!user){
                 request.flash('error', 'User doesnt exists');
@@ -29,19 +30,16 @@ async function(request,email,password,done){
             return done(null, false);
         }
 
-        // if user is found we return the user
-         
-        console.log('User found');
+        // if user is found we return the user 
         return done(null, user);
         
 
+    // if any error occured during the process
     }catch(error){
         request.flash('error', 'Error in creating new account')
         console.log('Error in bcrpyt', error);
         return done(error);
-
     }
-
  }
 ));
 

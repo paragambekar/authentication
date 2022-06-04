@@ -1,22 +1,27 @@
+// to use env variables 
 if(process.env.NODE_ENV !== 'production'){
     require('dotenv').config();
 }
 
+// Server 
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
 const port = process.env.PORT;
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./config/mongoose');
 const session = require('express-session');
+
+// Authentication
 const passport = require('passport');
 const passportLocal = require('./config/passport-local-strategy');
 const passportGoogle = require('./config/passport-google-oauth2-strategy');
 const MongoStore = require('connect-mongo');
 
+// SASS Middleware
 const sassMiddleware = require('node-sass-middleware');
 const flash = require('connect-flash');
 const customMware = require('./config/middleware');
-
 app.use(sassMiddleware({ 
     src : './assets/scss',
     dest : './assets/css',
@@ -26,9 +31,12 @@ app.use(sassMiddleware({
 }));
 
 app.use(express.urlencoded());
+app.use(cookieParser());
 
+// to access static files
 app.use(express.static('./assets'));
 
+// use express layouts
 app.use(expressLayouts);
 // extract style and scripts from sub pages into the layout
 app.set('layout extractStyles', true);
@@ -54,7 +62,7 @@ app.use(session({
 
 }));
 
-
+// use passport
 app.use(passport.initialize());
 app.use(passport.session());
 
