@@ -22,6 +22,14 @@ npm install
 npm run start
 ```
 
+## Features
+
+* Sign In / Sign Up using email & password
+* Sign In / Sign Up using Google
+* Reset Password
+* Forgot Password by sending email to reset password(Link expires in 15min)
+* Flash Notification
+
 ## Author
 
 👤 **Parag**
@@ -33,5 +41,3 @@ npm run start
 
 Give a ⭐️ if this project helped you!
 
-***
-_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
