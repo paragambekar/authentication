@@ -10,7 +10,7 @@
 
 ### 🏠 [Homepage](https://authenticator-nodejs.herokuapp.com)
 
-## [Video](https://www.youtube.com/watch?v=wNWwccXWwzE)
+### 📽️ [Video](https://www.youtube.com/watch?v=wNWwccXWwzE)
 
 ## Install
 
